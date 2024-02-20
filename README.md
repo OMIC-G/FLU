@@ -7,11 +7,11 @@ Surveillance of respiratory viruses has a multidisciplinary character, and must 
 As a part of the RELECOV (Red de Laboratorios de secuenciación de SARS-CoV-2) and for coordination with CNM-ISCIII (Centro Nacional de Microbiología, Instituto de Salud Carlos III), several activities are part of the routine of a sequencing laboratory: 
 1. Sequencing and bioinformatic analysis
 2. Submission sequences to GISAID
-3. Report of clades to autonomous community Health Authorities (SERGAS)
+3. Report of clades to the autonomous community Health Authorities (SERGAS)
 
 Here we present an integrated influenza virus analysis pipeline including all these steps.
 
-This is the result of a continuous collaborative effort of the following Institutions of the OMIC-G (Red de Laboratorios para la aplicación de Ómicas a la Microbiología Clínica en Galicia)
+This is the result of the collaborative work of the OMIC-G (Red de Laboratorios para la aplicación de Ómicas a la Microbiología Clínica en Galicia)
 
 ## Dependencies
 
@@ -36,7 +36,13 @@ The following folders are used through the whole analysis:
 * *gisaid*: for uploading the final .fasta and .csv files to GISAID
 * *mid*: temporary files created in the process and .fa files of each segment
 * *out*: final files created in the analysis: report, fasta, csv, ...
-* *refs*: .fasta reference files for each segment
+* *refs*: .fasta reference files for each segment and primer bed files
+
+First time, before alignment, you have to index the fasta references with bwa. As an example:
+
+```
+bwa-mem2 index -p H1N1_HA.fasta
+```
 
 
 ## 1. Flu typing: H1N1, H3N2 or BVic
@@ -67,17 +73,24 @@ FILE=${TYPE}_${SEGMENT}_${SAMPLE}
 # Aligning:
 bwa-mem2 mem -t 8 refs/${TYPE}_HA fastq/pre/${FILE}.fastq.gz > mid/${FILE}.sam
 
-# 2. Converting from .sam to .bam:
+# Converting from .sam to .bam:
 samtools view -bS mid/${FILE}.sam -o mid/${FILE}.bam
 
-# 3. Sorting:
+# Sorting:
 samtools sort mid/${FILE}.bam -o mid/${FILE}.sorted.bam
 
-# 4. Obtaining the coverage for H1N1/H3N2/BVic:
+# Triming primers:
+ivar trim -i mid/${FILE}.sorted.bam -b refs/${TYPE}_${SEGMENT}.primer.bed -p mid/${FILE}.trimmed -e -m 32
+
+# Re-sorting:
+samtools sort mid/${FILE}.trimmed.bam -o mid/${FILE}.sorted.bam
+
+
+# Obtaining the coverage for H1N1/H3N2/BVic:
 samtools index mid/${FILE}.sorted.bam
 cover=$(samtools coverage -H mid/${FILE}.sorted.bam | cut -f6)
 
-# 7. Discarding alignments below 80% coverage:
+# Discarding alignments below 80% coverage:
 if (( $(echo "$cover < 80" |bc -l) )); then
     rm mid/${FILE}*
 else
@@ -152,9 +165,9 @@ As a result, in the _mid_ folder we get the .fa files with the same name structu
 Besides, we create a single .fasta file for each subtype with the HA segments of all samples. We'll need these files later to query nextclade. 
 
 ```
-cat mid/H1N1_HA_*.fa > out/H1N1_HA_${FECHA}.fasta
-cat mid/H3N2_HA_*.fa > out/H3N2_HA_${FECHA}.fasta
-cat mid/BVic_HA_*.fa > out/BVic_HA_${FECHA}.fasta
+cat mid/H1N1_HA_*.fa > out/H1N1_HA.fasta
+cat mid/H3N2_HA_*.fa > out/H3N2_HA.fasta
+cat mid/BVic_HA_*.fa > out/BVic_HA.fasta
 ```
 
 ## 4. Sumarize quality and coverage data
@@ -197,7 +210,7 @@ samtools mpileup -A -d 0 --reference refs/${TYPE}_${SEGMENT}.fasta \
 The final report is made with an R script, summarizing all data obtained previously plus quality data obtained with `FastQC`, `Qualimap` and `multiqc` tools.
 
 ```
-samtools stats ${FILE} > mid/$FECHA/${MUESTRA}.stats
+samtools stats ${FILE} > mid/${SAMPLE}.stats
 
 fastqc fastq/*.fastq.gz --outdir=mid/fastqc/
 
@@ -238,9 +251,9 @@ In the _result.log_ generated you'll have the accession_id of each sample and ea
 After uploading to GISAID, you should access the GISAID website in order to release the samples.
 
 
-## Final report to SAÚDE PÚBLICA DE GALICIA
+## Final report to the autonomous community Health authorities
 
-In this final step, an .xlsx file is created with the data requested by SAÚDE PÚBLICA DE GALICIA. 
+In this final step, an .xlsx file is created with the data requested by Saúde Pública, Servizo Galego de Saúde, Galicia, Spain. 
 Again, we use R to write the .xlsx file including:
 - accession_id numbers from the fluCLI log
 - patient data and clade from the .ods from the LIS
