@@ -7,11 +7,11 @@ Surveillance of respiratory viruses has a multidisciplinary character, and must 
 As a part of the RELECOV (Red de Laboratorios de secuenciación de SARS-CoV-2) and for coordination with CNM-ISCIII (Centro Nacional de Microbiología, Instituto de Salud Carlos III), several activities are part of the routine of a sequencing laboratory: 
 1. Sequencing and bioinformatic analysis
 2. Submission sequences to GISAID
-3. Report of clades to the autonomous community Health Authorities (SERGAS)
+3. Report of clades to Servizo Galego de Saúde (SERGAS), Galicia, Spain
 
 Here we present an integrated influenza virus analysis pipeline including all these steps.
 
-This is the result of the collaborative work of the OMIC-G (Red de Laboratorios para la aplicación de Ómicas a la Microbiología Clínica en Galicia)
+This is a collaborative work of the OMIC-G (Red de Laboratorios para la aplicación de Ómicas a la Microbiología Clínica en Galicia). The OMIC-G network includes the Microbiology Departments of the Public Hospitals of Galicia, Spain 
 
 ## Dependencies
 
@@ -251,9 +251,9 @@ In the _result.log_ generated you'll have the accession_id of each sample and ea
 After uploading to GISAID, you should access the GISAID website in order to release the samples.
 
 
-## Final report to the autonomous community Health authorities
+## Final report to Servizo Galego de Saúde (SERGAS)
 
-In this final step, an .xlsx file is created with the data requested by Saúde Pública, Servizo Galego de Saúde, Galicia, Spain. 
+In this final step, an .xlsx file is created with the data requested by Consellería de Sanidade, Servizo Galego de Saúde (SERGAS), Galicia, Spain. 
 Again, we use R to write the .xlsx file including:
 - accession_id numbers from the fluCLI log
 - patient data and clade from the .ods from the LIS
